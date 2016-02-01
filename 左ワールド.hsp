@@ -1,92 +1,102 @@
 randomize
-screen 0,480,360			;ウィンドウ初期化
-HISC=0		;ハイスコア初期化
-title "左ワールドver1.2"
+screen 0,480,360
+;ハイスコア初期化
+HISC=0
+title "左ワールド"
 #include "mod_menu.as"
 
-; メニューアイテムIDを定義
-#enum CMD_QUIT			; [終了]アイテムのID
-#enum CMD_MESS			; [表示]アイテムのID
+;メニューアイテムIDを定義
+#enum CMD_MESS; [表示]アイテムのID
 
-        ; メッセージ割り込み
-        oncmd  gosub *OnCommand, WM_COMMAND
-        onexit gosub *OnExitMess
+;メッセージ割り込み
+oncmd  gosub *OnCommand, WM_COMMAND
+onexit gosub *OnExitMess
 
 
-; メニューバーの作成
-	newmenu hmenu,0						; メニュー作成
-        addmenu hmenu, "スタート(&S)", CMD_QUIT		
-         addmenu hmenu, "ヘルプ(&H)", CMD_MESS	; 表示
+;メニューバーの作成
+newmenu hmenu,0
+addmenu hmenu, "ヘルプ(&H)", CMD_MESS
         
+;メニュー割当
+applymenu hmenu
 
-	applymenu hmenu						; メニュー割り当て
+dialog "開始します。よろしいですか？",2,"左ワールド"
+	if stat=6 :goto *GAMESTART
+	end
 
-        stop
-
-; メッセージの処理
+;メッセージの処理
 *OnCommand
-        switch (wparam & 0xFFFF)
-        case CMD_QUIT   ; 終了
-                ; ( Send だと終了できないので注意 )
-                PostMessage hwnd, WM_CLOSE, 0, 0
-                swbreak
-        case CMD_MESS   ; ヘルプ
-                dialog "左クリック押しつづけで上昇　　はなすと下降　　壁にぶつかるとゲームオーバー", 0, "左ワールドver1.2のヘルプ"
-                swbreak
+	switch (wparam & 0xFFFF)
+        case CMD_MESS   ;ヘルプ
+        	dialog "左クリック押しつづけで上昇 はなすと下降 壁にぶつかるとゲームオーバー", 0, "左ワールドのヘルプ"
+        	swbreak
         swend
         return
 
 
 
 *OnExitMess
-        dialog "止めたい=YES やりたい=NO", 2, "左ワールドver1.2"
-        if stat = 6 {
-                end
-        }
+	dialog "終了します。よろしいですか？",2,"左ワールド"
+	if stat=6 :end
         
 
 *GAMESTART
-cls 4						;画面を黒で塗りつぶし
-UEKABE=100
-SUKIMA=200
-MY=180
-SPEED=0.0
-SC=0						;スコア初期化
+	;画面を黒で塗りつぶし
+	cls 4
+	UEKABE=100
+	SUKIMA=200
+	MY=180
+	SPEED=0.0
+	;スコア初期化
+	SC=0
 
 *DRAWLOOP
-	LV=SC/500+1				;スコアからレベルを算出
-	if LV>18 :LV=18			;　500点ごとに難易度上昇
+	;スコアからレベルを算出
+	LV=SC/500+1
+	;500点ごとに難易度上昇
+	if LV>18 :LV=18
 	
-	color 0,0,0				;右端に黒線を引く
+	;右端に黒線を引く
+	color 0,0,0
 	line 479,0,479,359
-	color 150,LV*40,0		;上壁を引く
+	;上壁を引く
+	color 150,LV*40,0
 	R=rnd(LV*2+1)-LV
 	UEKABE=UEKABE+R
-	if UEKABE<10 :UEKABE=10	;上壁の高さ制限
+	;上壁の高さ制限
+	if UEKABE<10 :UEKABE=10
 	if UEKABE>250 :UEKABE=250
 	line 479,0,479,UEKABE
 
-	R=rnd(LV*2+1)-LV		;隙間の高さを決める
+	;隙間の高さを決める
+	R=rnd(LV*2+1)-LV
 	SUKIMA=SUKIMA+R
-	if SUKIMA<100 :SUKIMA=100		;隙間の高さ制限
+	;隙間の高さ制限
+	if SUKIMA<100 :SUKIMA=100
 	if SUKIMA>200 :SUKIMA=200
-	line 479,UEKABE+SUKIMA,479,359	;下壁を引く
+	;下壁を引く
+	line 479,UEKABE+SUKIMA,479,359
 
-	pget 340,MY				;当たり判定。rvalが0以外ならゲームオーバー
+	;当たり判定。rvalが0以外ならゲームオーバー
+	pget 340,MY
 	if ginfo_r!0 :goto *GAMEOVER
-	color 255,255,255		;自キャラを表す白点の表示
+	;白点の表示
+	color 255,255,255
 	pset 340,MY
 	
-	stick KY,256				;スペースキーをチェックする
+	;スペースキーをチェック
+	stick KY,256
 	if KY=256 :SPEED=SPEED-0.25 :else : SPEED=SPEED+0.25
 	if SPEED>3.0 :SPEED=3.0
 	if SPEED<-3.0 :SPEED=-3.0
 	MY=MY+int(SPEED)
-
-	pos 0,0					;コピーする
+	
+	;コピーする
+	pos 0,0
 	gcopy 0,1,0,479,360
-
-	SC=SC+1					;スコア表示
+	
+	;スコア表示
+	SC=SC+1
 	color 0,0,0
 	boxf 80,0,270,16
 	pos 81,0
@@ -97,8 +107,9 @@ SC=0						;スコア初期化
 	goto *DRAWLOOP
 
 *GAMEOVER
-	if HISC<SC :HISC=SC		;ハイスコア設定
+	;ハイスコア設定
+	if HISC<SC :HISC=SC
 	wait 100
-	dialog "もう一回やるか？",2,"左ワールドver1.2"
+	dialog "再チャレンジしますか？",2,"左ワールド"
 	if stat=6 :goto *GAMESTART
 	end
